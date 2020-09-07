@@ -1,0 +1,106 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@using ChartJs.Blazor.ChartJS.PieChart
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.Common.Enums
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.Util
+
+<h1>Hello, world!</h1>
+
+Test Chart Js With Culture
+
+<MatSelect Label="Language" Value="@_selectedLanguage" ValueChanged="@LanguageChanged" TValue="string">
+    @foreach (Language lang in SupportedLanguages)
+    {
+        <MatOptionString Value="@lang.LangId">@lang.Title</MatOptionString>
+    }
+</MatSelect>
+
+<ChartJsPieChart @ref="_pieChartJs" Config="@_config" />
+
+@code{
+    private string _selectedLanguage;
+    private PieConfig _config;
+    private ChartJsPieChart _pieChartJs;
+    private PieDataset _pieSet;
+
+    public class Language
+    {
+        public string LangId { get; set; }
+
+        public string Title { get; set; }
+
+        public int IsDefault { get; set; }
+    }
+
+    private Language[] SupportedLanguages =
+    {
+        new Language
+        {
+            LangId = "en-US",
+            Title = "English"
+        },
+        new Language
+        {
+            LangId = "it-IT",
+            Title = "Italiano"
+        }
+    };
+
+    private void LanguageChanged(string lang)
+    {
+        this._selectedLanguage = lang;
+        var uri = new Uri(NavigationManager.Uri).GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        var query = $"?culture={Uri.EscapeDataString(lang)}&" + $"redirectUri={Uri.EscapeDataString(uri)}";
+
+        NavigationManager.NavigateTo("/Culture/SetCulture" + query, forceLoad: true);
+    }
+
+    protected override void OnInitialized()
+    {
+        _config = new PieConfig
+        {
+            Options = new PieOptions
+            {
+                MaintainAspectRatio = false,
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Gauge",
+                    FontSize = 10,
+                    Position = Position.Top
+                },
+                Animation = new ArcAnimation
+                {
+                    AnimateRotate = true,
+                    AnimateScale = true
+                },
+                Circumference = Math.PI,
+                Rotation = 1 * Math.PI,
+                CutoutPercentage = 80,
+                Legend =
+            {
+                Display = false
+            }
+            }
+        };
+        _config.Data.Labels.AddRange(new[] { "Title", "" });
+
+        var pieSet = new PieDataset
+        {
+            BorderWidth = 0,
+            HoverBorderWidth = 1
+        };
+        this._pieSet = pieSet;
+        this._pieSet.Data.AddRange(new double[] { 40, 60 });
+        this._pieSet.BackgroundColor = new[]
+        {
+            ColorUtil.ColorString(255, 0, 0, 0.7),
+            ColorUtil.ColorString(0, 255, 255, 0.5)
+        };
+        _config.Data.Datasets.Add(_pieSet);
+    }
+}
+
